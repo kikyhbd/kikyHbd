@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selamat Ulang Tahun!</title>
+    <!-- Library Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            width: 100vw; height: 100vh; overflow: hidden;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+            font-family: 'Poppins', sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            position: relative;
+        }
+
+        /* Screen Loading / Animasi Masuk Awal */
+        #loading-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        .loader-spinner {
+            width: 60px; height: 60px;
+            border: 6px solid rgba(255, 255, 255, 0.3);
+            border-top: 6px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #loading-screen h2 {
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+            animation: pulseText 1.5s infinite;
+        }
+
+        @keyframes pulseText {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .container {
+            text-align: center; z-index: 10;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 30px 50px; border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            opacity: 0;
+            transform: scale(0.3) translateY(-100px);
+            transition: all 1s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        .container.show {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        h1 { color: #fff; font-size: 2rem; margin-bottom: 5px; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
+        
+        .click-text {
+            color: #fff;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 10px;
+            display: block;
+            cursor: pointer;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .photo-container {
+            width: 140px; height: 140px; margin: 5px auto 15px auto;
+            border-radius: 50%; overflow: hidden;
+            border: 5px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            background: #fff;
+            position: relative;
+        }
+        .photo-container:hover { transform: scale(1.1); }
+        
+        .photo-container img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+
+        .photo-fallback {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #ffeaa7;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #d63031;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+            z-index: 1;
+        }
+
+        .cake {
+            width: 110px; height: 70px;
+            background: linear-gradient(135deg, #ff9a9e, #f8a5c2);
+            margin: 25px auto 10px auto;
+            border-radius: 12px 12px 0 0; position: relative;
+            box-shadow: inset 0 -10px 0 rgba(0,0,0,0.08), 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .cake::before {
+            content: '';
+            position: absolute; top: 0; left: 0; width: 100%; height: 20px;
+            background: #fff; border-radius: 12px 12px 5px 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .candle {
+            position: absolute; top: -45px; left: 51px;
+            transform: translateX(-50%);
+            width: 10px; height: 45px; 
+            background: repeating-linear-gradient(45deg, #ff4757, #ff4757 8px, #fff 8px, #fff 16px);
+            border-radius: 3px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .wick {
+            position: absolute; top: -6px; left: 50%;
+            transform: translateX(-50%);
+            width: 2px; height: 8px; background: #333;
+        }
+
+        /* Api Lilin Menari-nari Dinamis */
+        .flame {
+            position: absolute; top: -28px; left: 50%;
+            transform: translateX(-50%);
+            width: 16px; height: 24px; 
+            background: linear-gradient(to top, #ff4757, #ffa502, #fffa65);
+            border-radius: 50% 50% 20% 20% / 60% 60% 40% 40%;
+            box-shadow: 0 0 12px #ff4757, 0 0 24px #ffa502, inset 0 2px 4px rgba(255,255,255,0.6);
+            animation: flameFlicker 0.4s infinite alternate ease-in-out;
+            cursor: pointer;
+            transform-origin: bottom center;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        @keyframes flameFlicker {
+            0% { transform: translateX(-50%) scale(1) rotate(-3deg); }
+            50% { transform: translateX(-50%) scale(1.08) rotate(2deg) skewX(2deg); }
+            100% { transform: translateX(-50%) scale(0.95) rotate(-1deg); }
+        }
+
+        /* Kelas saat lilin ditiup (padam) */
+        .flame.out {
+            opacity: 0;
+            transform: translateX(-50%) scale(0) !important;
+            pointer-events: none;
+        }
+
+        .btn-tiup {
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: background 0.2s, transform 0.1s;
+            margin-top: 5px;
+        }
+        .btn-tiup:hover { background-color: #ff5252; transform: scale(1.05); }
+        .btn-tiup:active { transform: scale(0.95); }
+
+        .balloon {
+            position: absolute; bottom: -150px;
+            width: 40px; height: 50px; border-radius: 50%;
+            animation: flyUp 8s infinite ease-in; z-index: 1;
+        }
+        @keyframes flyUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-110vh); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <div class="loader-spinner"></div>
+        <h2>Memuat Kejutan...</h2>
+    </div>
+
+    <div class="container" id="main-container">
+        <h1>HBD MUHAMMAD RAMADAN RIZKY PUTRA</h1>
+        
+        <a href="https://whatsapp.com/channel/0029Vb6ME8Y0lwgn8EuA4F0l" target="_blank" style="text-decoration:none;">
+            <span class="click-text">KLIK FOTO INI</span>
+            <div class="photo-container">
+                <div class="photo-fallback" id="fallback-text">Foto Belum Dimasukkan</div>
+                <img src="231021_2.jpg" alt="Foto Ulang Tahun" onerror="this.style.display='none'">
+            </div>
+        </a>
+
+        <div class="cake">
+            <div class="candle">
+                <div class="wick"></div>
+                <!-- Klik api atau tombol untuk tiup / nyalakan lagi -->
+                <div class="flame" id="flame" onclick="toggleLilin()"></div>
+            </div>
+        </div>
+
+        <button class="btn-tiup" onclick="toggleLilin()">🎂 Tiup / Nyalakan Lilin!</button>
+        <p style="color:white; font-size: 1.1rem; font-weight: bold; margin-top: 10px;">DIET OO KIKY</p>
+    </div>
+
+    <div class="balloon" style="left: 10%; background: #ff6b6b; animation-duration: 7s;"></div>
+    <div class="balloon" style="left: 30%; background: #feca57; animation-duration: 9s; animation-delay: 2s;"></div>
+    <div class="balloon" style="left: 60%; background: #48dbfb; animation-duration: 6s;"></div>
+    <div class="balloon" style="left: 85%; background: #1dd1a1; animation-duration: 10s; animation-delay: 1s;"></div>
+
+    <script>
+        const imgElement = document.querySelector('.photo-container img');
+        const fallbackElement = document.getElementById('fallback-text');
+        
+        imgElement.onload = function() {
+            fallbackElement.style.display = 'none';
+        };
+
+        window.onload = function() {
+            setTimeout(function() {
+                const loadingScreen = document.getElementById('loading-screen');
+                const mainContainer = document.getElementById('main-container');
+
+                loadingScreen.style.opacity = '0';
+                loadingScreen.style.visibility = 'hidden';
+
+                mainContainer.classList.add('show');
+
+                triggerConfettiAndSound();
+            }, 1500);
+        };
+
+        function triggerConfettiAndSound() {
+            playPopSound();
+            let duration = 3 * 1000;
+            let end = Date.now() + duration;
+
+            let interval = setInterval(function() {
+                if (Date.now() > end) return clearInterval(interval);
+                confetti({ particleCount: 40, angle: 60, spread: 55, origin: { x: 0 } });
+                confetti({ particleCount: 40, angle: 120, spread: 55, origin: { x: 1 } });
+            }, 250);
+        }
+
+        // Variabel global untuk AudioContext agar aman digunakan berkali-kali
+        let audioCtx = null;
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        // Fungsi Toggle: Bisa meniup (memadamkan) dan menyalakan kembali lilin
+        function toggleLilin() {
+            const flame = document.getElementById('flame');
+            
+            if (flame.classList.contains('out')) {
+                // Nyalakan kembali lilinnya
+                flame.classList.remove('out');
+                playSparkSound();
+            } else {
+                // Tiup (padamkan) lilinnya
+                flame.classList.add('out');
+                playHissSound(); 
+                confetti({
+                    particleCount: 100,
+                    spread: 120,
+                    origin: { y: 0.7 }
+                });
+            }
+        }
+
+        function playPopSound() {
+            try {
+                const ctx = getAudioContext();
+                for(let i = 0; i < 3; i++) {
+                    setTimeout(() => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(120 + (i * 30), ctx.currentTime);
+                        osc.frequency.exponentialRampToValueAtTime(20, ctx.currentTime + 0.3);
+                        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                        gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start();
+                        osc.stop(ctx.currentTime + 0.3);
+                    }, i * 150);
+                }
+            } catch(e) {}
+        }
+
+        function playHissSound() {
+            try {
+                const ctx = getAudioContext();
+                const durationSeconds = 0.8;
+                const bufferSize = ctx.sampleRate * durationSeconds;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = ctx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 1200;
+                filter.Q.value = 1.5;
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(0.4, ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + durationSeconds);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+                noise.start();
+            } catch(e) {}
+        }
+
+        function playSparkSound() {
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.2);
+            } catch(e) {}
+        }
+    </script>
+</body>
+</html>
